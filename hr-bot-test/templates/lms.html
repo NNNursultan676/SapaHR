@@ -1,0 +1,123 @@
+
+{% extends "base.html" %}
+
+{% block title %}Обучение - SapaHR{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📚 Обучение и развитие</h1>
+    <p>Развивайте свои навыки с помощью корпоративных курсов</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">📖</div>
+        <div class="stat-info">
+            <h3>{{ stats.my_courses }}</h3>
+            <p>Мои курсы</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-info">
+            <h3>{{ stats.completed_courses }}</h3>
+            <p>Завершено</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">🏆</div>
+        <div class="stat-info">
+            <h3>{{ stats.total_points }}</h3>
+            <p>Баллов получено</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>Доступные курсы</h2>
+        {% if is_admin %}
+        <button class="btn btn-primary" onclick="showAddCourseModal()">+ Добавить курс</button>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <div class="courses-grid">
+            {% for course in courses %}
+            <div class="course-card">
+                <div class="course-icon">{{ course.icon }}</div>
+                <h3>{{ course.title }}</h3>
+                <p>{{ course.description }}</p>
+                <div class="course-meta">
+                    <span>⏱ {{ course.duration }} часов</span>
+                    <span>🏆 {{ course.points }} баллов</span>
+                </div>
+                {% if course.enrollment %}
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ course.enrollment.progress }}%"></div>
+                    </div>
+                    <span>{{ course.enrollment.progress }}% завершено</span>
+                </div>
+                <a href="{{ url_for('course_detail', id=course.id) }}" class="btn btn-secondary">Продолжить</a>
+                {% else %}
+                <form action="{{ url_for('enroll_course', id=course.id) }}" method="POST">
+                    <button class="btn btn-primary">Начать обучение</button>
+                </form>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+.courses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.course-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 24px;
+    transition: transform 0.2s;
+}
+
+.course-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+.course-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.course-meta {
+    display: flex;
+    gap: 16px;
+    margin: 16px 0;
+    color: #666;
+}
+
+.progress-container {
+    margin: 16px 0;
+}
+
+.progress-bar {
+    background: #e0e0e0;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.progress-fill {
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    height: 100%;
+    transition: width 0.3s;
+}
+</style>
+{% endblock %}

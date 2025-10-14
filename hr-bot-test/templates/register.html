@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация - SapaHR</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-logo">
+                <div class="logo-circle">👤</div>
+            </div>
+            <h1>SapaHR</h1>
+            <h2>Создание аккаунта</h2>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST" action="{{ url_for('register') }}" class="login-form">
+                <div class="form-group">
+                    <label>👤 Имя</label>
+                    <input type="text" name="first_name" placeholder="Введите ваше имя" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>👤 Фамилия</label>
+                    <input type="text" name="last_name" placeholder="Введите вашу фамилию" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>📧 Email</label>
+                    <input type="email" name="email" placeholder="example@company.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>📱 Телефон</label>
+                    <input type="tel" name="phone" placeholder="+7 (___) ___-__-__" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>🔒 Пароль</label>
+                    <input type="password" name="password" placeholder="Минимум 6 символов" required minlength="6">
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <span>Создать аккаунт</span>
+                    <span class="btn-arrow">→</span>
+                </button>
+            </form>
+            
+            <div class="login-footer">
+                <p>Уже есть аккаунт? 
+                    <a href="{{ url_for('login') }}">Войти</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

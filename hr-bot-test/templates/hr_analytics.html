@@ -1,0 +1,203 @@
+
+{% extends "base.html" %}
+
+{% block title %}HR Analytics - SapaHR{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📊 HR Analytics</h1>
+</div>
+
+<div class="tabs">
+    <button class="tab active" onclick="switchTab('hiring')">Воронка найма</button>
+    <button class="tab" onclick="switchTab('turnover')">Текучесть кадров</button>
+    <button class="tab" onclick="switchTab('performance')">Эффективность</button>
+</div>
+
+<div id="hiring-tab" class="tab-content active">
+    <div class="card">
+        <div class="card-header">
+            <h2>Воронка найма</h2>
+        </div>
+        <div class="card-body">
+            <div class="funnel-chart">
+                <div class="funnel-item" style="width: 100%;">
+                    <span>Новый кандидат</span>
+                    <strong>{{ stats.new_candidates }} (100%)</strong>
+                </div>
+                <div class="funnel-item" style="width: 80%;">
+                    <span>Интервью</span>
+                    <strong>{{ stats.interview_candidates }} ({{ stats.interview_percent }}%)</strong>
+                </div>
+                <div class="funnel-item" style="width: 50%;">
+                    <span>Оценка заказчиком</span>
+                    <strong>{{ stats.assessment_candidates }} ({{ stats.assessment_percent }}%)</strong>
+                </div>
+                <div class="funnel-item" style="width: 20%;">
+                    <span>Оффер принят</span>
+                    <strong>{{ stats.offer_candidates }} ({{ stats.offer_percent }}%)</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2>Причины отказа</h2>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="rejectionChart"></canvas>
+            </div>
+            <div class="rejection-stats">
+                {% for reason in rejection_reasons %}
+                <div class="stat-row">
+                    <span>{{ reason.name }}</span>
+                    <strong>{{ reason.count }} ({{ reason.percent }}%)</strong>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="turnover-tab" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <h2>Текучесть по месяцам</h2>
+        </div>
+        <div class="card-body">
+            <canvas id="turnoverChart"></canvas>
+            <div class="stats-grid" style="margin-top: 20px;">
+                <div class="stat-card">
+                    <h3>{{ turnover.rate }}%</h3>
+                    <p>Общая текучесть сотрудников</p>
+                </div>
+                <div class="stat-card">
+                    <h3>{{ turnover.avg_tenure }}</h3>
+                    <p>Средний срок работы</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2>Причины увольнения</h2>
+        </div>
+        <div class="card-body">
+            <canvas id="terminationChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div id="performance-tab" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <h2>Прогресс показателей</h2>
+        </div>
+        <div class="card-body">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Показатель</th>
+                        <th>Исполнитель</th>
+                        <th>Период</th>
+                        <th>Тип плана</th>
+                        <th>Тип факта</th>
+                        <th>План</th>
+                        <th>Выполнение</th>
+                        <th>%</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for metric in performance_metrics %}
+                    <tr>
+                        <td>{{ metric.name }}</td>
+                        <td>
+                            <div class="user-info">
+                                <img src="{{ metric.user_avatar }}" class="avatar-sm">
+                                {{ metric.user_name }}
+                            </div>
+                        </td>
+                        <td>{{ metric.period }}</td>
+                        <td>{{ metric.plan_type }}</td>
+                        <td>{{ metric.fact_type }}</td>
+                        <td>{{ metric.plan }}</td>
+                        <td>{{ metric.actual }}</td>
+                        <td>
+                            <div class="progress-bar" style="--progress: {{ metric.percent }}%">
+                                <span class="progress-value" 
+                                      style="background: {% if metric.percent >= 95 %}#4CAF50{% elif metric.percent >= 70 %}#FFC107{% else %}#f44336{% endif %}">
+                                    {{ metric.percent }}%
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.funnel-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+}
+
+.funnel-item {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 auto;
+}
+
+.progress-bar {
+    width: 100%;
+    background: #f0f0f0;
+    border-radius: 20px;
+    overflow: hidden;
+    height: 30px;
+}
+
+.progress-value {
+    display: block;
+    height: 100%;
+    width: var(--progress);
+    text-align: center;
+    line-height: 30px;
+    color: white;
+    font-weight: bold;
+}
+
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+}
+</style>
+
+<script>
+function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    event.target.classList.add('active');
+    document.getElementById(tab + '-tab').classList.add('active');
+}
+</script>
+{% endblock %}
