@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Информация о статусах - SapaHR{% endblock %}
+
+{% block content %}
+<div class="status-info-page">
+    <h1>ℹ️ Информация о статусах</h1>
+    
+    <div class="status-grid">
+        <div class="status-card active">
+            <div class="status-icon">🟢</div>
+            <h3>Активный</h3>
+            <p>Сотрудник работает в офисе</p>
+            <ul>
+                <li>Присутствует на рабочем месте</li>
+                <li>Доступен для коммуникации</li>
+                <li>Участвует в совещаниях</li>
+            </ul>
+        </div>
+        
+        <div class="status-card remote">
+            <div class="status-icon">🟡</div>
+            <h3>Удаленно</h3>
+            <p>Сотрудник работает из дома</p>
+            <ul>
+                <li>Работает дистанционно</li>
+                <li>Доступен онлайн</li>
+                <li>Участвует в видеоконференциях</li>
+            </ul>
+        </div>
+        
+        <div class="status-card vacation">
+            <div class="status-icon">🔴</div>
+            <h3>Отпуск</h3>
+            <p>Сотрудник находится в отпуске</p>
+            <ul>
+                <li>Временно отсутствует</li>
+                <li>Не доступен для рабочих задач</li>
+                <li>Вернется согласно графику</li>
+            </ul>
+        </div>
+        
+        <div class="status-card sick">
+            <div class="status-icon">⚫</div>
+            <h3>Больничный</h3>
+            <p>Сотрудник на больничном</p>
+            <ul>
+                <li>Временная нетрудоспособность</li>
+                <li>Не доступен</li>
+                <li>Требуется медицинская справка</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="info-section">
+        <h2>📋 Как изменить статус</h2>
+        <div class="steps">
+            <div class="step">
+                <span class="step-number">1</span>
+                <p>Перейдите в раздел "Мой профиль"</p>
+            </div>
+            <div class="step">
+                <span class="step-number">2</span>
+                <p>Выберите нужный статус из списка</p>
+            </div>
+            <div class="step">
+                <span class="step-number">3</span>
+                <p>Укажите причину (опционально)</p>
+            </div>
+            <div class="step">
+                <span class="step-number">4</span>
+                <p>Сохраните изменения</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.status-info-page {
+    padding: 20px 0;
+}
+
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin: 30px 0;
+}
+
+.status-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-left: 4px solid;
+}
+
+.status-card.active {
+    border-left-color: #4caf50;
+}
+
+.status-card.remote {
+    border-left-color: #ff9800;
+}
+
+.status-card.vacation {
+    border-left-color: #f44336;
+}
+
+.status-card.sick {
+    border-left-color: #9e9e9e;
+}
+
+.status-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.status-card h3 {
+    margin: 10px 0;
+    color: #333;
+}
+
+.status-card p {
+    color: #666;
+    margin: 10px 0;
+}
+
+.status-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 15px 0 0 0;
+}
+
+.status-card ul li {
+    padding: 5px 0;
+    color: #777;
+    font-size: 14px;
+}
+
+.status-card ul li:before {
+    content: "✓ ";
+    color: #4caf50;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.info-section {
+    background: #f5f5f5;
+    border-radius: 12px;
+    padding: 30px;
+    margin-top: 30px;
+}
+
+.info-section h2 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    background: #2196F3;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.step p {
+    margin: 0;
+    color: #555;
+}
+</style>
+{% endblock %}

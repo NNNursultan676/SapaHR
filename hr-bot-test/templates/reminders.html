@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Напоминания - SapaHR{% endblock %}
+
+{% block content %}
+<div class="reminders-page">
+    <h1>⏰ Напоминания</h1>
+    
+    <div class="reminders-list">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Заголовок</th>
+                    <th>Сообщение</th>
+                    <th>Дата напоминания</th>
+                    <th>Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reminder in reminders %}
+                <tr>
+                    <td>{{ reminder.id }}</td>
+                    <td>{{ reminder.title }}</td>
+                    <td>{{ reminder.message[:50] }}...</td>
+                    <td>{{ reminder.reminder_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        {% if reminder.is_sent %}
+                            <span class="badge badge-success">Отправлено</span>
+                        {% else %}
+                            <span class="badge badge-pending">Ожидает</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

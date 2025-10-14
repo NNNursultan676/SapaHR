@@ -1,0 +1,210 @@
+
+{% extends "base.html" %}
+
+{% block title %}Каталог заявок - SapaHR{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📝 Заявки</h1>
+</div>
+
+<div class="tabs">
+    <button class="tab active" onclick="switchTab('catalog')">Каталог заявок</button>
+    <button class="tab" onclick="switchTab('my')">Мои заявки</button>
+    <button class="tab" onclick="switchTab('pending')">Требует действий</button>
+    <button class="tab" onclick="switchTab('watching')">Наблюдаю</button>
+    <button class="tab" onclick="switchTab('all')">Все заявки</button>
+</div>
+
+<div id="catalog-tab" class="tab-content active">
+    <div class="requests-layout">
+        <div class="requests-sidebar">
+            <h3>Группы</h3>
+            <ul class="request-groups">
+                <li class="group-item active">
+                    <span>Все заявки</span>
+                    <span class="badge">{{ total_requests }}</span>
+                </li>
+                <li class="group-item">
+                    <span>IT</span>
+                </li>
+                <li class="group-item">
+                    <span>Заявки в бухгалтерию</span>
+                </li>
+                <li class="group-item">
+                    <span>Заявки в отдел кадров</span>
+                </li>
+                <li class="group-item">
+                    <span>Заявки в отдел системного администрирования</span>
+                </li>
+                <li class="group-item">
+                    <span>Новая заявка</span>
+                </li>
+                <li class="group-item">
+                    <span>Группа процесса заявки тест Арсен</span>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="requests-main">
+            <div class="requests-header">
+                <h2>Все заявки</h2>
+                <button class="btn btn-primary" onclick="showNewRequestModal()">Настроить заявку</button>
+            </div>
+            
+            <div class="search-bar">
+                <input type="text" placeholder="Поиск..." class="search-input">
+            </div>
+            
+            <div class="requests-list">
+                {% for category in request_categories %}
+                <div class="request-category">
+                    <div class="category-icon" style="background: {{ category.color }}">
+                        {{ category.icon }}
+                    </div>
+                    <div class="category-info">
+                        <h3>{{ category.title }}</h3>
+                        <p>{{ category.description }}</p>
+                    </div>
+                    <div class="category-actions">
+                        <button class="icon-btn" title="Скопировать">📋</button>
+                        <button class="icon-btn" title="Поделиться">🔗</button>
+                        <button class="btn btn-primary" onclick="createRequest('{{ category.id }}')">Создать заявку</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="my-tab" class="tab-content">
+    <div class="card">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Заявка</th>
+                    <th>Статус</th>
+                    <th>Дата создания</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for request in my_requests %}
+                <tr>
+                    <td>{{ request.title }}</td>
+                    <td><span class="status-badge status-{{ request.status }}">{{ request.status }}</span></td>
+                    <td>{{ request.created_at.strftime('%d.%m.%Y') }}</td>
+                    <td>
+                        <button class="btn btn-sm">Просмотр</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+.requests-layout {
+    display: flex;
+    gap: 24px;
+}
+
+.requests-sidebar {
+    width: 280px;
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.request-groups {
+    list-style: none;
+    padding: 0;
+}
+
+.group-item {
+    padding: 12px;
+    margin: 4px 0;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.group-item:hover, .group-item.active {
+    background: #f5f5f5;
+}
+
+.requests-main {
+    flex: 1;
+}
+
+.requests-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.request-category {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.category-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.category-info {
+    flex: 1;
+}
+
+.category-info h3 {
+    margin: 0 0 4px 0;
+}
+
+.category-info p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.category-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 8px;
+}
+</style>
+
+<script>
+function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    event.target.classList.add('active');
+    document.getElementById(tab + '-tab').classList.add('active');
+}
+</script>
+{% endblock %}

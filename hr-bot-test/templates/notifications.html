@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Уведомления - SapaHR{% endblock %}
+
+{% block content %}
+<div class="notifications-page">
+    <h1>🔔 Уведомления</h1>
+    
+    <div class="notifications-list">
+        {% for notification in notifications %}
+        <div class="notification-item {% if not notification.is_read %}unread{% endif %}">
+            <div class="notification-header">
+                <h3>{{ notification.title }}</h3>
+                <span class="notification-date">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+            </div>
+            <p>{{ notification.message }}</p>
+        </div>
+        {% endfor %}
+        
+        {% if not notifications %}
+        <p class="no-data">Уведомлений пока нет</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
