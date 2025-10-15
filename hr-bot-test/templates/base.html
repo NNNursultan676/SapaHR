@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SapaHR{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    </head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="top-navbar">
+        <div class="top-nav-container">
+            <div class="nav-brand">
+                <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+                <h2>🏢 SapaHR</h2>
+            </div>
+            <div class="nav-right">
+                <div class="nav-search">
+                    <form action="{{ url_for('search') }}" method="GET" class="search-form-nav">
+                        <input type="text" name="q" placeholder="🔍 Поиск..." class="search-nav-input">
+                    </form>
+                </div>
+
+                {% if session.get('original_role') == 'developer' %}
+                <div class="role-switcher">
+                    <select onchange="window.location.href='/switch-role/' + this.value" class="role-select">
+                        <option value="developer" {% if session.get('role') == 'developer' %}selected{% endif %}>👨‍💻 Разработчик</option>
+                        <option value="admin" {% if session.get('role') == 'admin' %}selected{% endif %}>👨‍💼 Админ</option>
+                        <option value="moderator" {% if session.get('role') == 'moderator' %}selected{% endif %}>🛡️ Модератор</option>
+                        <option value="manager" {% if session.get('role') == 'manager' %}selected{% endif %}>📊 Руководитель</option>
+                        <option value="employee" {% if session.get('role') == 'employee' %}selected{% endif %}>👤 Пользователь</option>
+                    </select>
+                </div>
+                {% endif %}
+
+                {% if session.get('role') %}
+                <div class="user-profile">
+                    <span class="user-badge">
+                        {% if session.get('role') == 'developer' %}
+                            👨‍💻 {{ session.get('username') }}
+                        {% elif session.get('role') == 'admin' %}
+                            👨‍💼 {{ session.get('username') }}
+                        {% elif session.get('role') == 'moderator' %}
+                            🛡️ {{ session.get('username') }}
+                        {% elif session.get('role') == 'manager' %}
+                            📊 {{ session.get('username') }}
+                        {% else %}
+                            👤 {{ session.get('username') }}
+                        {% endif %}
+                    </span>
+                </div>
+                {% endif %}
+                <a href="{{ url_for('logout') }}" class="logout-btn-top">Выход</a>
+            </div>
+        </div>
+
+        </nav>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-content">
+            <div class="sidebar-section">
+                <h3>Главное</h3>
+                <ul class="sidebar-menu">
+                    <li><a href="{{ url_for('dashboard') }}"><span>📊</span> Главная</a></li>
+                    {% if session.get('role') != 'admin' %}
+                    <li><a href="{{ url_for('profile') }}"><span>👤</span> Мой профиль</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('notifications') }}"><span>🔔</span> Уведомления</a></li>
+                    <li><a href="{{ url_for('polls') }}"><span>📋</span> Опросы</a></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>Информация</h3>
+                <ul class="sidebar-menu">
+                    <li><a href="{{ url_for('requests_catalog') }}"><span>📝</span> Заявки</a></li>
+                    <li><a href="{{ url_for('employees') }}"><span>👥</span> Сотрудники</a></li>
+                    <li><a href="{{ url_for('lms') }}"><span>🎓</span> Курсы</a></li>
+                    <li><a href="{{ url_for('knowledge') }}"><span>📚</span> База знаний</a></li>
+                </ul>
+            </div>
+
+            {% if session.get('role') in ['developer', 'admin', 'moderator'] %}
+            <div class="sidebar-section">
+                <h3>Администрирование</h3>
+                <ul class="sidebar-menu">
+                    {% if session.get('role') in ['developer', 'admin'] %}
+                    <li><a href="{{ url_for('hr_analytics') }}"><span>📈</span> Аналитика</a></li>
+                    <li><a href="{{ url_for('broadcast') }}"><span>📢</span> Рассылка</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('manage_roles') }}"><span>🔐</span> Управление ролями</a></li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-wrapper">
+        <div class="container main-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+
+        // Close sidebar on outside click (mobile)
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768) {
+                if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                    sidebar.classList.remove('active');
+                }
+            }
+        });
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>
