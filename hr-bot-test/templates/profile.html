@@ -1,0 +1,652 @@
+
+{% extends "base.html" %}
+
+{% block title %}Профиль - SapaHR{% endblock %}
+
+{% block content %}
+<div class="profile-candidate-page">
+    <div class="profile-candidate-container">
+        <!-- Header with Avatar and Basic Info -->
+        <div class="profile-candidate-header">
+            <div class="profile-candidate-left">
+                <div class="profile-candidate-avatar">
+                    <img src="{{ user.avatar or '/static/images/default-avatar.png' }}" 
+                         alt="{{ user.first_name }}" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="avatar-placeholder" style="display:none;">
+                        {{ user.first_name[0] if user.first_name else '?' }}
+                    </div>
+                </div>
+                <div class="profile-candidate-info">
+                    <h1>{{ user.first_name }} {{ user.last_name or '' }}</h1>
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <span class="icon">📞</span>
+                            <span>{{ user.phone or 'Не указан' }}</span>
+                        </div>
+                        <div class="contact-item">
+                            <span class="icon">✉️</span>
+                            <span>{{ user.email or 'Не указан' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-candidate-actions">
+                <button class="btn-action" onclick="showModal('editModal')">
+                    <span>✏️</span> Редактировать
+                </button>
+                <button class="btn-action danger">
+                    <span>🗑️</span> Удалить
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="profile-tabs">
+            <button class="tab-button active" data-tab="main">Главная</button>
+            <button class="tab-button" data-tab="offer">Оффер</button>
+            <button class="tab-button" data-tab="interviews">Собеседования</button>
+            <button class="tab-button" data-tab="tasks">Задачи</button>
+            <button class="tab-button" data-tab="documents">Документы</button>
+            <button class="tab-button" data-tab="notes">Заметки</button>
+            <button class="tab-button" data-tab="history">История</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content-wrapper">
+            <!-- Main Tab -->
+            <div class="tab-content active" id="main">
+                <div class="profile-main-grid">
+                    <!-- Left Column -->
+                    <div class="profile-left-column">
+                        <!-- Vacancies Section -->
+                        <div class="profile-section">
+                            <div class="section-header">
+                                <h2>Вакансии</h2>
+                                <button class="btn-icon" onclick="showModal('addVacancyModal')">+</button>
+                            </div>
+                            <div class="vacancy-card">
+                                <div class="vacancy-header">
+                                    <h3>{{ user.position or 'Должность не указана' }}</h3>
+                                    <div class="dropdown">
+                                        <button class="dropdown-toggle">⋯</button>
+                                    </div>
+                                </div>
+                                <div class="vacancy-status">
+                                    <span class="status-badge status-active">Оффер принят</span>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 75%"></div>
+                                    </div>
+                                </div>
+                                <button class="btn-link" onclick="toggleHistory()">
+                                    <span id="historyToggle">▼</span> Скрыть историю
+                                </button>
+                                <div class="vacancy-history" id="vacancyHistory">
+                                    <div class="history-item">
+                                        <div class="history-avatar">👤</div>
+                                        <div class="history-content">
+                                            <p><strong>Отметить сотрудника</strong></p>
+                                            <p class="history-meta">
+                                                <span>Новый кандидат</span>
+                                                <span class="date">{{ user.created_at.strftime('%d.%m.%Y %H:%M') if user.created_at else '' }}</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Company Info -->
+                        <div class="profile-section">
+                            <h2>Основная информация</h2>
+                            <form method="POST" action="{{ url_for('update_profile') }}">
+                                <div class="form-group">
+                                    <label for="company">Компания</label>
+                                    <select id="company" name="company" required>
+                                        <option value="">Выберите компанию</option>
+                                        {% for comp in ['Sapa Technologies', 'Neo Factoring', 'Sapa Digital Finance', 'AlgaPay', 'AI Parking', 'Sapa Digital Communications', 'Sapa Solutions'] %}
+                                        <option value="{{ comp }}" {% if user.company == comp %}selected{% endif %}>{{ comp }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="position">Должность</label>
+                                    <input type="text" id="position" name="position" value="{{ user.position or '' }}" 
+                                           placeholder="Введите должность" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="department">Отдел</label>
+                                    <input type="text" id="department" name="department" value="{{ user.department or '' }}" 
+                                           placeholder="Введите отдел">
+                                </div>
+
+                                <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="profile-right-column">
+                        <!-- Tags Section -->
+                        <div class="profile-section">
+                            <div class="section-header">
+                                <h2>Теги</h2>
+                                <button class="btn-icon-edit">✏️</button>
+                            </div>
+                            <div class="tags-container">
+                                <p class="no-data">Тегов нет</p>
+                            </div>
+                        </div>
+
+                        <!-- Cover Letter Section -->
+                        <div class="profile-section">
+                            <div class="section-header">
+                                <h2>Сопроводительное письмо</h2>
+                                <button class="btn-icon-edit">✏️</button>
+                            </div>
+                            <div class="cover-letter">
+                                <p class="no-data">Нет сопроводительного письма</p>
+                            </div>
+                        </div>
+
+                        <!-- Notes Section -->
+                        <div class="profile-section">
+                            <div class="section-header">
+                                <h2>Заметки</h2>
+                                <button class="btn-icon-edit">✏️</button>
+                            </div>
+                            <div class="notes-container">
+                                <p class="no-data">Заметок нет</p>
+                            </div>
+                        </div>
+
+                        <!-- Stats Section -->
+                        <div class="profile-section">
+                            <h2>Статистика</h2>
+                            <div class="stats-grid-profile">
+                                <div class="stat-item">
+                                    <span class="stat-label">Баллы</span>
+                                    <span class="stat-value">{{ user.points or 0 }}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Уровень</span>
+                                    <span class="stat-value">{{ user.level or 1 }}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Telegram ID</span>
+                                    <span class="stat-value">{{ user.telegram_id or '-' }}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Дата регистрации</span>
+                                    <span class="stat-value">{{ user.created_at.strftime('%d.%m.%Y') if user.created_at else '-' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other Tabs (Placeholder) -->
+            <div class="tab-content" id="offer">
+                <div class="empty-state">
+                    <h3>📄 Информация об оффере</h3>
+                    <p>Здесь будет информация об офферах</p>
+                </div>
+            </div>
+
+            <div class="tab-content" id="interviews">
+                <div class="empty-state">
+                    <h3>🎤 Собеседования</h3>
+                    <p>Здесь будет история собеседований</p>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tasks">
+                <div class="empty-state">
+                    <h3>✅ Задачи</h3>
+                    <p>Здесь будут задачи кандидата</p>
+                </div>
+            </div>
+
+            <div class="tab-content" id="documents">
+                <div class="empty-state">
+                    <h3>📎 Документы</h3>
+                    <p>Здесь будут документы кандидата</p>
+                </div>
+            </div>
+
+            <div class="tab-content" id="notes">
+                <div class="empty-state">
+                    <h3>📝 Заметки</h3>
+                    <p>Здесь можно добавлять заметки</p>
+                </div>
+            </div>
+
+            <div class="tab-content" id="history">
+                <div class="empty-state">
+                    <h3>📜 История</h3>
+                    <p>Здесь будет полная история действий</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-candidate-page {
+    background: #f5f7fa;
+    min-height: calc(100vh - 64px);
+    padding: 24px;
+}
+
+.profile-candidate-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.profile-candidate-header {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.profile-candidate-left {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+}
+
+.profile-candidate-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+}
+
+.profile-candidate-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: 700;
+}
+
+.profile-candidate-info h1 {
+    margin: 0 0 12px 0;
+    font-size: 28px;
+    color: #1e293b;
+}
+
+.contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+}
+
+.contact-item .icon {
+    font-size: 16px;
+}
+
+.profile-candidate-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-action:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.btn-action.danger {
+    color: #ef4444;
+}
+
+.btn-action.danger:hover {
+    background: #fef2f2;
+    border-color: #fca5a5;
+}
+
+.profile-tabs {
+    background: white;
+    border-radius: 16px;
+    padding: 8px;
+    margin-bottom: 24px;
+    display: flex;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.tab-button {
+    padding: 12px 24px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    color: #64748b;
+    transition: all 0.2s;
+}
+
+.tab-button:hover {
+    background: #f1f5f9;
+}
+
+.tab-button.active {
+    background: #6366f1;
+    color: white;
+}
+
+.tab-content-wrapper {
+    position: relative;
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.profile-main-grid {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 24px;
+}
+
+.profile-section {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    background: #f8fafc;
+}
+
+.btn-icon-edit {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.btn-icon-edit:hover {
+    opacity: 1;
+}
+
+.vacancy-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.vacancy-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.vacancy-header h3 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.dropdown-toggle {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.vacancy-status {
+    margin-bottom: 16px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+
+.status-active {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.progress-bar {
+    height: 8px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+    transition: width 0.3s;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: #6366f1;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.vacancy-history {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.history-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+}
+
+.history-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.history-content p {
+    margin: 0 0 4px 0;
+}
+
+.history-meta {
+    font-size: 13px;
+    color: #64748b;
+    display: flex;
+    gap: 12px;
+}
+
+.tags-container,
+.cover-letter,
+.notes-container {
+    min-height: 60px;
+}
+
+.no-data {
+    color: #94a3b8;
+    font-size: 14px;
+    text-align: center;
+    padding: 20px;
+}
+
+.stats-grid-profile {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.stat-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-state h3 {
+    margin: 0 0 12px 0;
+    color: #1e293b;
+}
+
+.empty-state p {
+    margin: 0;
+    color: #64748b;
+}
+
+@media (max-width: 1024px) {
+    .profile-main-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .profile-tabs {
+        overflow-x: auto;
+    }
+}
+</style>
+
+<script>
+// Tab switching
+document.querySelectorAll('.tab-button').forEach(button => {
+    button.addEventListener('click', () => {
+        const tabId = button.dataset.tab;
+        
+        // Remove active class from all tabs and buttons
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        // Add active class to clicked button and corresponding content
+        button.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+    });
+});
+
+// Toggle history
+function toggleHistory() {
+    const history = document.getElementById('vacancyHistory');
+    const toggle = document.getElementById('historyToggle');
+    
+    if (history.style.display === 'none') {
+        history.style.display = 'block';
+        toggle.textContent = '▼';
+    } else {
+        history.style.display = 'none';
+        toggle.textContent = '▶';
+    }
+}
+
+function showModal(modalId) {
+    alert('Функция в разработке: ' + modalId);
+}
+</script>
+{% endblock %}

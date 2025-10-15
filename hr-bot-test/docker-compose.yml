@@ -1,0 +1,22 @@
+
+    version: '3.9'
+    services:
+      web:
+        build:
+          context: .
+        container_name: hr-bot-main
+        ports:
+          - "5065:5055"
+        environment:
+          - BOT_TOKEN=${BOT_TOKEN:-8487284499:AAFImjGE-CA087Xtf-ICmBYFNbJ0iY_slN0}
+          - GROUP_ID=${GROUP_ID:--1002723413852}
+          - DATABASE_URL=${DATABASE_URL:-postgresql://admin:testpassword@10.128.0.79:5469/postgres}
+          - SECRET_KEY=${SECRET_KEY:-your-secret-key-here-change-in-production}
+          - USE_FALLBACK_DATA=${USE_FALLBACK_DATA:-false}
+          - EMAIL_USERNAME=${EMAIL_USERNAME:-}
+          - EMAIL_PASSWORD=${EMAIL_PASSWORD:-}
+          - EMAIL_FROM=${EMAIL_FROM:-noreply@sapaedu.kz}
+          - HOST_ADMIN_LOGIN=${HOST_ADMIN_LOGIN:-admin@gmail.com}
+          - HOST_ADMIN_PASSWORD=${HOST_ADMIN_PASSWORD:-testpassword}
+          - HOST_ADMIN_TELEGRAM_ID=${HOST_ADMIN_TELEGRAM_ID:-8090093417}
+        restart: unless-stopped
