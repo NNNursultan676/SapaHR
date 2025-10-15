@@ -1,0 +1,258 @@
+
+{% extends "base.html" %}
+
+{% block title %}Обучение - SapaHR{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>📚 Обучение и развитие</h1>
+    <p>Инструкция по прохождению корпоративных курсов</p>
+</div>
+
+<div class="info-card">
+    <div class="info-icon">📖</div>
+    <h2>Как пройти обучение?</h2>
+    <p>Следуйте простым шагам для доступа к образовательной платформе Sapa Edu</p>
+</div>
+
+<div class="steps-container">
+    <div class="step-card">
+        <div class="step-number">1</div>
+        <div class="step-content">
+            <h3>Вступите в группу</h3>
+            <p>Присоединяйтесь к нашей официальной группе в Telegram</p>
+            <a href="https://t.me/+9A7tEPygENxiOGEy" target="_blank" class="btn btn-primary">
+                📱 Вступить в группу
+            </a>
+        </div>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">2</div>
+        <div class="step-content">
+            <h3>Напишите боту</h3>
+            <p>Свяжитесь с ботом для получения доступа к платформе</p>
+            <a href="https://t.me/sapaedubot" target="_blank" class="btn btn-primary">
+                🤖 Написать боту
+            </a>
+        </div>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">3</div>
+        <div class="step-content">
+            <h3>Начните обучение</h3>
+            <p>Получите доступ к курсам, тестам и обучению онлайн</p>
+            <div class="platform-info">
+                <p><strong>Образовательная платформа Sapa Edu</strong></p>
+                <ul>
+                    <li>✅ Курсы по различным направлениям</li>
+                    <li>✅ Тесты для проверки знаний</li>
+                    <li>✅ Сертификаты после прохождения</li>
+                    <li>✅ Обучение онлайн в удобное время</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="benefits-section">
+    <h2>Преимущества обучения</h2>
+    <div class="benefits-grid">
+        <div class="benefit-card">
+            <div class="benefit-icon">🎓</div>
+            <h3>Профессиональный рост</h3>
+            <p>Развивайте свои навыки и компетенции</p>
+        </div>
+        <div class="benefit-card">
+            <div class="benefit-icon">⏰</div>
+            <h3>Гибкий график</h3>
+            <p>Учитесь в удобное для вас время</p>
+        </div>
+        <div class="benefit-card">
+            <div class="benefit-icon">📜</div>
+            <h3>Сертификаты</h3>
+            <p>Получайте подтверждение знаний</p>
+        </div>
+        <div class="benefit-card">
+            <div class="benefit-icon">🏆</div>
+            <h3>Карьерный рост</h3>
+            <p>Повышайте свою квалификацию</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.page-header h1 {
+    font-size: 36px;
+    color: #667eea;
+    margin-bottom: 10px;
+}
+
+.info-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.info-icon {
+    font-size: 64px;
+    margin-bottom: 15px;
+}
+
+.info-card h2 {
+    margin-bottom: 10px;
+}
+
+.steps-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    margin-bottom: 50px;
+}
+
+.step-card {
+    display: flex;
+    gap: 30px;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+}
+
+.step-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.step-number {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.step-content {
+    flex: 1;
+}
+
+.step-content h3 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 24px;
+}
+
+.step-content p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.platform-info {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+.platform-info ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+}
+
+.platform-info li {
+    padding: 5px 0;
+    color: #333;
+}
+
+.btn {
+    display: inline-block;
+    padding: 12px 30px;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.benefits-section {
+    margin-top: 50px;
+}
+
+.benefits-section h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+    font-size: 32px;
+}
+
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.benefit-card {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+}
+
+.benefit-card:hover {
+    transform: translateY(-5px);
+}
+
+.benefit-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.benefit-card h3 {
+    color: #667eea;
+    margin-bottom: 10px;
+}
+
+.benefit-card p {
+    color: #666;
+}
+
+@media (max-width: 768px) {
+    .step-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .step-number {
+        margin: 0 auto;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,165 @@
+
+{% extends "base.html" %}
+
+{% block title %}Управление ролями - SapaHR{% endblock %}
+
+{% block content %}
+<div class="manage-roles-page">
+    <h1>🔐 Управление ролями пользователей</h1>
+    
+    <div class="roles-info">
+        <h3>Уровни доступа и права:</h3>
+        <ul>
+            <li><strong>👨‍💻 Разработчик (5)</strong> - Полный доступ ко всем функциям + управление всеми ролями</li>
+            <li><strong>👨‍💼 Админ (4)</strong> - Администрирование системы + может добавлять других админов, модераторов, руководителей и пользователей</li>
+            <li><strong>🛡️ Модератор (3)</strong> - Модерация контента + может добавлять руководителей и пользователей</li>
+            <li><strong>📊 Руководитель (2)</strong> - Управление командой (не может назначать роли)</li>
+            <li><strong>👤 Пользователь (1)</strong> - Базовый доступ (не может назначать роли)</li>
+        </ul>
+        
+        {% if current_role == 'developer' %}
+            <p><strong>Ваши права:</strong> Вы можете назначать любые роли всем пользователям</p>
+        {% elif current_role == 'admin' %}
+            <p><strong>Ваши права:</strong> Вы можете назначать роли: Админ, Модератор, Руководитель, Пользователь</p>
+        {% elif current_role == 'moderator' %}
+            <p><strong>Ваши права:</strong> Вы можете добавлять и назначать роли: Руководитель, Пользователь</p>
+        {% endif %}
+    </div>
+
+    <div class="users-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Имя</th>
+                    <th>Email</th>
+                    <th>Текущая роль</th>
+                    <th>Уровень</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.first_name }} {{ user.last_name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                        {% if user.role == 'developer' %}👨‍💻 Разработчик
+                        {% elif user.role == 'admin' %}👨‍💼 Админ
+                        {% elif user.role == 'moderator' %}🛡️ Модератор
+                        {% elif user.role == 'manager' %}📊 Руководитель
+                        {% else %}👤 Пользователь
+                        {% endif %}
+                    </td>
+                    <td>{{ user.role_level or 1 }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('assign_role', user_id=user.id) }}" style="display: inline-block;">
+                            <select name="role" class="role-select-small">
+                                {% if current_role == 'developer' %}
+                                    <option value="developer" {% if user.role == 'developer' %}selected{% endif %}>Разработчик</option>
+                                    <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Админ</option>
+                                    <option value="moderator" {% if user.role == 'moderator' %}selected{% endif %}>Модератор</option>
+                                    <option value="manager" {% if user.role == 'manager' %}selected{% endif %}>Руководитель</option>
+                                    <option value="employee" {% if user.role == 'employee' %}selected{% endif %}>Пользователь</option>
+                                {% elif current_role == 'admin' %}
+                                    <option value="moderator" {% if user.role == 'moderator' %}selected{% endif %}>Модератор</option>
+                                    <option value="manager" {% if user.role == 'manager' %}selected{% endif %}>Руководитель</option>
+                                    <option value="employee" {% if user.role == 'employee' %}selected{% endif %}>Пользователь</option>
+                                {% elif current_role == 'moderator' %}
+                                    <option value="manager" {% if user.role == 'manager' %}selected{% endif %}>📊 Руководитель</option>
+                                    <option value="employee" {% if user.role == 'employee' %}selected{% endif %}>👤 Пользователь</option>
+                                {% endif %}
+                            </select>
+                            <button type="submit" class="btn-small">Изменить</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+.manage-roles-page {
+    padding: 20px;
+}
+
+.roles-info {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+.roles-info ul {
+    list-style: none;
+    padding: 0;
+}
+
+.roles-info li {
+    padding: 8px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.users-table {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.users-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.users-table th {
+    background: #667eea;
+    color: white;
+    padding: 12px;
+    text-align: left;
+}
+
+.users-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.role-select-small {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-right: 8px;
+}
+
+.btn-small {
+    padding: 6px 16px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-small:hover {
+    background: #5568d3;
+}
+
+.role-select {
+    padding: 8px 16px;
+    border: 2px solid #667eea;
+    border-radius: 6px;
+    background: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 15px;
+}
+
+.role-select:hover {
+    background: #f0f4ff;
+}
+</style>
+{% endblock %}
