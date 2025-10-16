@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }} - База знаний{% endblock %}
+
+{% block content %}
+<div class="category-page">
+    <div class="breadcrumb">
+        <a href="{{ url_for('knowledge') }}">📚 База знаний</a> / <span>{{ category.name }}</span>
+    </div>
+    
+    <div class="category-header">
+        <div class="category-icon-large">{{ category.icon }}</div>
+        <div class="category-info">
+            <h1>{{ category.name }}</h1>
+            <p>{{ category.description or 'Полезная информация по этой теме' }}</p>
+        </div>
+    </div>
+    
+    {% if is_admin %}
+    <div class="admin-panel">
+        <button class="btn-add" onclick="toggleAddArticleForm()">➕ Добавить статью</button>
+    </div>
+    
+    <div id="addArticleForm" class="form-modal" style="display: none;">
+        <div class="form-content">
+            <h2>Добавить статью в "{{ category.name }}"</h2>
+            <form method="POST" action="{{ url_for('add_knowledge_article') }}">
+                <input type="hidden" name="category_id" value="{{ category.id }}">
+                <div class="form-group">
+                    <label>Заголовок</label>
+                    <input type="text" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label>Содержание</label>
+                    <textarea name="content" rows="15" required></textarea>
+                </div>
+                <button type="submit" class="btn-primary">Создать</button>
+                <button type="button" class="btn-secondary" onclick="toggleAddArticleForm()">Отмена</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="articles-grid">
+        {% if articles %}
+            {% for article in articles %}
+            <a href="{{ url_for('knowledge_article', article_id=article.id) }}" class="article-card">
+                <h3>{{ article.title }}</h3>
+                <p>{{ article.content[:200] }}...</p>
+                <div class="article-footer">
+                    <span>✍️ {{ article.author }}</span>
+                    <span>👁 {{ article.views }}</span>
+                    <span>📅 {{ article.created_at.strftime('%d.%m.%Y') }}</span>
+                </div>
+            </a>
+            {% endfor %}
+        {% else %}
+            <p class="no-articles">В этой категории пока нет статей</p>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.category-page {
+    padding: 20px 0;
+}
+
+.breadcrumb {
+    margin-bottom: 20px;
+    color: #666;
+}
+
+.breadcrumb a {
+    color: #2196F3;
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.category-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 40px;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.category-icon-large {
+    font-size: 80px;
+}
+
+.category-info h1 {
+    margin: 0 0 10px 0;
+}
+
+.category-info p {
+    margin: 0;
+    opacity: 0.9;
+}
+
+.articles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.article-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    text-decoration: none;
+    color: inherit;
+    border-left: 4px solid #2196F3;
+}
+
+.article-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.article-card h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.article-card p {
+    color: #666;
+    line-height: 1.6;
+}
+
+.article-footer {
+    display: flex;
+    gap: 15px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+    font-size: 14px;
+    color: #888;
+}
+
+.no-articles {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 50px;
+    color: #999;
+}
+
+.admin-panel {
+    margin: 20px 0;
+}
+
+.btn-add {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: background 0.3s;
+}
+
+.btn-add:hover {
+    background: #45a049;
+}
+
+.form-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.form-content {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 800px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #2196F3;
+}
+
+.btn-primary {
+    background: #2196F3;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+    margin-right: 10px;
+}
+
+.btn-primary:hover {
+    background: #1976D2;
+}
+
+.btn-secondary {
+    background: #757575;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-secondary:hover {
+    background: #616161;
+}
+</style>
+
+<script>
+function toggleAddArticleForm() {
+    const form = document.getElementById('addArticleForm');
+    form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+}
+</script>
+{% endblock %}
