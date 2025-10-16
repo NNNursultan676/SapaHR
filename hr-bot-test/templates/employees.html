@@ -1,0 +1,734 @@
+
+{% extends "base.html" %}
+
+{% block title %}Сотрудники - SapaHR{% endblock %}
+
+{% block content %}
+<div class="employees-page">
+    <div class="page-header-employees">
+        <h1>👥 Сотрудники</h1>
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-value">{{ employees|length }}</span>
+                <span class="stat-label">Всего сотрудников</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ employees|selectattr('is_active')|list|length }}</span>
+                <span class="stat-label">Активных</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="search-filters-container">
+        <div class="search-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="employeeSearch" placeholder="Поиск по имени, должности, компании..." class="search-input">
+        </div>
+        
+        <div class="filters-row">
+            <select id="companyFilter" class="filter-select">
+                <option value="">Все компании</option>
+                {% set companies = employees|map(attribute='company')|unique|list %}
+                {% for company in companies %}
+                    {% if company %}
+                        <option value="{{ company }}">{{ company }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+            
+            <select id="roleFilter" class="filter-select">
+                <option value="">Все роли</option>
+                <option value="developer">Разработчик</option>
+                <option value="admin">Администратор</option>
+                <option value="moderator">Модератор</option>
+                <option value="manager">Руководитель</option>
+                <option value="employee">Сотрудник</option>
+            </select>
+            
+            <select id="sortBy" class="filter-select">
+                <option value="name">По имени</option>
+                <option value="points">По баллам</option>
+                <option value="company">По компании</option>
+            </select>
+            
+            <button class="filter-reset" onclick="resetFilters()">Сбросить</button>
+        </div>
+    </div>
+    
+    <div class="employees-grid" id="employeesGrid">
+        {% for employee in employees %}
+        <div class="employee-card" 
+             data-name="{{ employee.first_name }} {{ employee.last_name or '' }}" 
+             data-company="{{ employee.company or '' }}" 
+             data-position="{{ employee.position or '' }}"
+             data-role="{{ employee.role }}"
+             data-points="{{ employee.points }}"
+             onclick="openEmployeeModal({{ employee.id }})">
+            <div class="employee-card-header">
+                <div class="employee-avatar {{ 'avatar-' + (loop.index % 5)|string }}">
+                    {{ employee.first_name[0] if employee.first_name else '?' }}
+                </div>
+                <div class="role-badge role-{{ employee.role }}">
+                    {% if employee.role == 'developer' %}🔧
+                    {% elif employee.role == 'admin' %}👑
+                    {% elif employee.role == 'moderator' %}🛡️
+                    {% elif employee.role == 'manager' %}📊
+                    {% else %}👤{% endif %}
+                </div>
+            </div>
+            <div class="employee-info">
+                <h3>{{ employee.first_name }} {{ employee.last_name or '' }}</h3>
+                <p class="employee-position">{{ employee.position or 'Должность не указана' }}</p>
+                <p class="employee-company">🏢 {{ employee.company or 'Компания не указана' }}</p>
+                <div class="employee-footer">
+                    <span class="employee-points">🏆 {{ employee.points }}</span>
+                    <span class="employee-status {{ 'active' if employee.is_active else 'inactive' }}">
+                        {{ '🟢 Активен' if employee.is_active else '🔴 Неактивен' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="empty-icon">🔍</div>
+        <h3>Сотрудники не найдены</h3>
+        <p>Попробуйте изменить параметры поиска</p>
+    </div>
+</div>
+
+<!-- Модальное окно с детальной информацией -->
+<div class="modal-overlay" id="employeeModal">
+    <div class="modal-container">
+        <button class="modal-close" onclick="closeEmployeeModal()">✕</button>
+        <div class="modal-content" id="modalContent">
+            <!-- Контент загружается динамически -->
+        </div>
+    </div>
+</div>
+
+<style>
+.employees-page {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.page-header-employees {
+    margin-bottom: 30px;
+}
+
+.page-header-employees h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #1e293b;
+}
+
+.stats-bar {
+    display: flex;
+    gap: 30px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #6366f1;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #64748b;
+}
+
+.search-filters-container {
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.search-wrapper {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+}
+
+.search-input {
+    width: 100%;
+    padding: 14px 20px 14px 50px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+.filters-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.filter-select {
+    padding: 10px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-select:hover {
+    border-color: #cbd5e1;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #6366f1;
+}
+
+.filter-reset {
+    padding: 10px 20px;
+    background: #f1f5f9;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #475569;
+    transition: all 0.2s;
+}
+
+.filter-reset:hover {
+    background: #e2e8f0;
+}
+
+.employees-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.employee-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.employee-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    transform: scaleX(0);
+    transition: transform 0.3s;
+}
+
+.employee-card:hover::before {
+    transform: scaleX(1);
+}
+
+.employee-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+}
+
+.employee-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.employee-avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: bold;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.avatar-0 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.avatar-1 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+.avatar-2 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.avatar-3 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+.avatar-4 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+
+.role-badge {
+    font-size: 1.5rem;
+    padding: 6px;
+    border-radius: 8px;
+    background: #f1f5f9;
+}
+
+.role-developer { background: #dbeafe; }
+.role-admin { background: #fef3c7; }
+.role-moderator { background: #ddd6fe; }
+.role-manager { background: #dcfce7; }
+
+.employee-info h3 {
+    margin: 0 0 8px 0;
+    color: #1e293b;
+    font-size: 1.1rem;
+}
+
+.employee-position {
+    color: #64748b;
+    margin: 6px 0;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.employee-company {
+    color: #94a3b8;
+    margin: 6px 0;
+    font-size: 0.9rem;
+}
+
+.employee-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.employee-points {
+    color: #f59e0b;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.employee-status {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.employee-status.active {
+    color: #22c55e;
+}
+
+.employee-status.inactive {
+    color: #ef4444;
+}
+
+/* Модальное окно */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-container {
+    background: white;
+    border-radius: 24px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    animation: slideUp 0.3s;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: #f1f5f9;
+    cursor: pointer;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    z-index: 1;
+}
+
+.modal-close:hover {
+    background: #e2e8f0;
+    transform: rotate(90deg);
+}
+
+.modal-content {
+    padding: 40px;
+}
+
+.modal-header-section {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.modal-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    font-weight: bold;
+    color: white;
+    margin: 0 auto 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+.modal-header-section h2 {
+    margin: 0 0 10px 0;
+    font-size: 1.8rem;
+    color: #1e293b;
+}
+
+.modal-role-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 30px 0;
+}
+
+.info-block {
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 12px;
+}
+
+.info-block label {
+    display: block;
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.info-block .value {
+    font-size: 1.05rem;
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.action-buttons-modal {
+    display: flex;
+    gap: 12px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.btn-modal {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+}
+
+.btn-primary-modal {
+    background: #6366f1;
+    color: white;
+}
+
+.btn-primary-modal:hover {
+    background: #5558e3;
+    transform: translateY(-2px);
+}
+
+.btn-danger-modal {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-danger-modal:hover {
+    background: #dc2626;
+}
+
+/* Пустое состояние */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.4;
+}
+
+.empty-state h3 {
+    color: #475569;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: #94a3b8;
+}
+
+@media (max-width: 768px) {
+    .stats-bar {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .employees-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .filters-row {
+        flex-direction: column;
+    }
+    
+    .filter-select {
+        width: 100%;
+    }
+}
+</style>
+
+<script>
+const employees = {{ employees | tojson }};
+const isAdmin = {{ 'true' if is_admin else 'false' }};
+
+function openEmployeeModal(employeeId) {
+    const employee = employees.find(e => e.id === employeeId);
+    if (!employee) return;
+    
+    const roleNames = {
+        'developer': 'Разработчик',
+        'admin': 'Администратор',
+        'moderator': 'Модератор',
+        'manager': 'Руководитель',
+        'employee': 'Сотрудник'
+    };
+    
+    const roleIcons = {
+        'developer': '🔧',
+        'admin': '👑',
+        'moderator': '🛡️',
+        'manager': '📊',
+        'employee': '👤'
+    };
+    
+    const modalContent = `
+        <div class="modal-header-section">
+            <div class="modal-avatar avatar-${employee.id % 5}">
+                ${employee.first_name ? employee.first_name[0] : '?'}
+            </div>
+            <h2>${employee.first_name} ${employee.last_name || ''}</h2>
+            <div class="modal-role-badge role-${employee.role}">
+                ${roleIcons[employee.role]} ${roleNames[employee.role]}
+            </div>
+        </div>
+        
+        <div class="info-grid">
+            <div class="info-block">
+                <label>📧 Email</label>
+                <div class="value">${employee.email || 'Не указан'}</div>
+            </div>
+            <div class="info-block">
+                <label>📱 Телефон</label>
+                <div class="value">${employee.phone || 'Не указан'}</div>
+            </div>
+            <div class="info-block">
+                <label>🏢 Компания</label>
+                <div class="value">${employee.company || 'Не указана'}</div>
+            </div>
+            <div class="info-block">
+                <label>💼 Должность</label>
+                <div class="value">${employee.position || 'Не указана'}</div>
+            </div>
+            <div class="info-block">
+                <label>🏆 Баллы</label>
+                <div class="value">${employee.points}</div>
+            </div>
+            <div class="info-block">
+                <label>📊 Уровень</label>
+                <div class="value">${employee.level || 1}</div>
+            </div>
+            <div class="info-block">
+                <label>📍 Отдел</label>
+                <div class="value">${employee.department || 'Не указан'}</div>
+            </div>
+            <div class="info-block">
+                <label>🔘 Статус</label>
+                <div class="value">${employee.is_active ? '🟢 Активен' : '🔴 Неактивен'}</div>
+            </div>
+        </div>
+        
+        ${isAdmin && employee.role !== 'developer' ? `
+        <div class="action-buttons-modal">
+            <form method="POST" action="/employee/delete/${employee.id}" 
+                  onsubmit="return confirm('Вы уверены, что хотите удалить учетную запись ${employee.first_name} ${employee.last_name || ''}?')"
+                  style="flex: 1;">
+                <button type="submit" class="btn-modal btn-danger-modal" style="width: 100%;">
+                    🗑️ Удалить сотрудника
+                </button>
+            </form>
+        </div>
+        ` : ''}
+    `;
+    
+    document.getElementById('modalContent').innerHTML = modalContent;
+    document.getElementById('employeeModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeEmployeeModal() {
+    document.getElementById('employeeModal').classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+// Закрытие по клику вне модального окна
+document.getElementById('employeeModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeEmployeeModal();
+    }
+});
+
+// Закрытие по ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeEmployeeModal();
+    }
+});
+
+function filterEmployees() {
+    const searchTerm = document.getElementById('employeeSearch').value.toLowerCase();
+    const companyFilter = document.getElementById('companyFilter').value.toLowerCase();
+    const roleFilter = document.getElementById('roleFilter').value.toLowerCase();
+    const sortBy = document.getElementById('sortBy').value;
+    
+    const cards = Array.from(document.querySelectorAll('.employee-card'));
+    let visibleCount = 0;
+    
+    cards.forEach(card => {
+        const name = card.dataset.name.toLowerCase();
+        const company = card.dataset.company.toLowerCase();
+        const position = card.dataset.position.toLowerCase();
+        const role = card.dataset.role.toLowerCase();
+        
+        const matchesSearch = name.includes(searchTerm) || company.includes(searchTerm) || position.includes(searchTerm);
+        const matchesCompany = !companyFilter || company === companyFilter;
+        const matchesRole = !roleFilter || role === roleFilter;
+        
+        if (matchesSearch && matchesCompany && matchesRole) {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    // Сортировка
+    const grid = document.getElementById('employeesGrid');
+    const sortedCards = cards.filter(card => card.style.display !== 'none').sort((a, b) => {
+        if (sortBy === 'name') {
+            return a.dataset.name.localeCompare(b.dataset.name);
+        } else if (sortBy === 'points') {
+            return parseInt(b.dataset.points) - parseInt(a.dataset.points);
+        } else if (sortBy === 'company') {
+            return a.dataset.company.localeCompare(b.dataset.company);
+        }
+        return 0;
+    });
+    
+    sortedCards.forEach(card => grid.appendChild(card));
+    
+    // Показать/скрыть пустое состояние
+    document.getElementById('emptyState').style.display = visibleCount === 0 ? 'block' : 'none';
+}
+
+function resetFilters() {
+    document.getElementById('employeeSearch').value = '';
+    document.getElementById('companyFilter').value = '';
+    document.getElementById('roleFilter').value = '';
+    document.getElementById('sortBy').value = 'name';
+    filterEmployees();
+}
+
+// Обработчики событий
+document.getElementById('employeeSearch').addEventListener('input', filterEmployees);
+document.getElementById('companyFilter').addEventListener('change', filterEmployees);
+document.getElementById('roleFilter').addEventListener('change', filterEmployees);
+document.getElementById('sortBy').addEventListener('change', filterEmployees);
+</script>
+{% endblock %}

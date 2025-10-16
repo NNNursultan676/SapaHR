@@ -1,0 +1,892 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="requests-catalog-page">
+    <!-- Header Banner -->
+    <div class="catalog-header-banner">
+        <div class="header-content">
+            <div class="header-text">
+                <h1>📋 Каталог заявок</h1>
+                <p>Шаблоны и документы для подачи заявок</p>
+            </div>
+            <div class="header-stats">
+                <div class="stat-item">
+                    <span class="stat-number">{{ templates|length }}</span>
+                    <span class="stat-label">Шаблонов</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{{ total_requests }}</span>
+                    <span class="stat-label">Заявок</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="catalog-tabs">
+        <button class="tab-btn active" onclick="switchTab('templates')">
+            📚 Шаблоны
+        </button>
+        <button class="tab-btn" onclick="switchTab('files')">
+            📎 Файлы для скачивания
+        </button>
+        <button class="tab-btn" onclick="switchTab('my-requests')">
+            📝 Мои заявки
+        </button>
+    </div>
+
+    <!-- Tab Content: Templates -->
+    <div class="tab-content active" id="templates-tab">
+        {% if is_admin %}
+        <div class="admin-controls-section">
+            <div class="card">
+                <div class="card-header">
+                    <h2>⚙️ Управление шаблонами</h2>
+                </div>
+                <div class="card-body">
+                    <div class="action-buttons">
+                        <button onclick="toggleModal('addTemplateModal')" class="btn btn-primary">
+                            <span>➕</span> Добавить шаблон
+                        </button>
+                        <button onclick="toggleModal('addFileModal')" class="btn btn-secondary">
+                            <span>📎</span> Добавить файл
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if templates %}
+        <div class="templates-grid">
+            {% for template in templates %}
+            <div class="template-card-modern">
+                <div class="template-header">
+                    <div class="template-icon" style="background-color: {{ template.color }};">
+                        {{ template.icon }}
+                    </div>
+                    <div class="template-info">
+                        <h3>{{ template.title }}</h3>
+                        <p class="template-description">{{ template.description }}</p>
+                        <span class="company-badge">{{ template.company }}</span>
+                    </div>
+                </div>
+
+                {% if files_by_template.get(template.id) %}
+                <div class="template-files">
+                    <h4>📎 Файлы:</h4>
+                    <div class="file-grid">
+                        {% for file in files_by_template[template.id] %}
+                        <a href="{{ url_for('open_file', file_id=file.id) }}" target="_blank" class="file-card">
+                            <div class="file-icon">
+                                {% if file.file_type == 'pdf' %}📄
+                                {% elif file.file_type == 'doc' %}📝
+                                {% elif file.file_type == 'xls' %}📊
+                                {% else %}📋{% endif %}
+                            </div>
+                            <div class="file-info">
+                                <span class="file-name">{{ file.filename }}</span>
+                                <span class="file-type">{{ file.file_type.upper() }}</span>
+                            </div>
+                        </a>
+                        {% if is_admin %}
+                        <form method="POST" action="{{ url_for('delete_file', file_id=file.id) }}" style="display: inline;">
+                            <button type="submit" class="btn-delete-file" onclick="return confirm('Удалить файл?')">🗑️</button>
+                        </form>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if is_admin %}
+                <div class="template-actions">
+                    <button onclick="editTemplate({{ template.id }}, '{{ template.title }}', '{{ template.description }}', '{{ template.company }}', '{{ template.icon }}', '{{ template.color }}')" class="btn btn-primary btn-sm">✏️ Изменить</button>
+                    <form method="POST" action="{{ url_for('delete_template', template_id=template.id) }}" onsubmit="return confirm('Удалить шаблон?')" style="display: inline;">
+                        <button type="submit" class="btn btn-danger btn-sm">🗑️ Удалить</button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <p>Шаблоны пока не добавлены</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Tab Content: Files -->
+    <div class="tab-content" id="files-tab">
+        <h2 class="section-title">📎 Файлы для скачивания</h2>
+        {% if files_by_template.get('general') or files_by_template.values()|sum(start=[])|length > 0 %}
+        <div class="files-grid">
+            {% for template_id, files in files_by_template.items() %}
+                {% for file in files %}
+                <a href="{{ url_for('open_file', file_id=file.id) }}" target="_blank" class="file-card-large">
+                    <div class="file-icon-large">
+                        {% if file.file_type == 'pdf' %}📄
+                        {% elif file.file_type == 'doc' %}📝
+                        {% elif file.file_type == 'xls' %}📊
+                        {% else %}📋{% endif %}
+                    </div>
+                    <div class="file-info-large">
+                        <h4>{{ file.filename }}</h4>
+                        <span class="file-type-badge">{{ file.file_type.upper() }}</span>
+                        <p class="file-company">{{ file.company }}</p>
+                    </div>
+                    {% if is_admin %}
+                    <form method="POST" action="{{ url_for('delete_file', file_id=file.id) }}" style="display: inline;" onclick="event.preventDefault(); event.stopPropagation(); if(confirm('Удалить файл?')) this.submit();">
+                        <button type="submit" class="btn-delete-file-large">🗑️</button>
+                    </form>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📎</div>
+            <p>Файлы пока не добавлены</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Tab Content: My Requests -->
+    <div class="tab-content" id="my-requests-tab">
+        <h2 class="section-title">📝 Мои заявки</h2>
+        {% if my_requests %}
+        <div class="requests-table-container">
+            <table class="requests-table">
+                <thead>
+                    <tr>
+                        <th>Заявка</th>
+                        <th>Тип</th>
+                        <th>Статус</th>
+                        <th>Дата создания</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in my_requests %}
+                    <tr>
+                        <td>
+                            <div class="request-title">{{ req.title }}</div>
+                            <div class="request-description">{{ req.description[:100] }}...</div>
+                        </td>
+                        <td><span class="type-badge">{{ req.request_type }}</span></td>
+                        <td>
+                            {% if req.status == 'pending' %}
+                                <span class="status-badge status-pending">⏳ Ожидает</span>
+                            {% elif req.status == 'approved' %}
+                                <span class="status-badge status-approved">✅ Одобрено</span>
+                            {% else %}
+                                <span class="status-badge status-rejected">❌ Отклонено</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ req.created_at.strftime('%d.%m.%Y %H:%M') if req.created_at else 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📝</div>
+            <p>У вас пока нет заявок</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add Template Modal -->
+<div id="addTemplateModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>➕ Добавить шаблон заявки</h3>
+            <button class="close-btn" onclick="toggleModal('addTemplateModal')">✕</button>
+        </div>
+        <form method="POST" action="{{ url_for('add_template') }}">
+            <div class="form-group">
+                <label>Название</label>
+                <input type="text" name="title" required placeholder="Например: Заявка на отпуск">
+            </div>
+            <div class="form-group">
+                <label>Описание</label>
+                <textarea name="description" rows="3" placeholder="Краткое описание шаблона"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Компания</label>
+                <select name="company" required>
+                    {% for company in companies %}
+                    <option value="{{ company }}">{{ company }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Иконка (эмодзи)</label>
+                <input type="text" name="icon" value="📝" maxlength="2">
+            </div>
+            <div class="form-group">
+                <label>Цвет</label>
+                <input type="color" name="color" value="#E8F5E9">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="toggleModal('addTemplateModal')">Отмена</button>
+                <button type="submit" class="btn btn-primary">Создать</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Template Modal -->
+<div id="editTemplateModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>✏️ Изменить шаблон заявки</h3>
+            <button class="close-btn" onclick="toggleModal('editTemplateModal')">✕</button>
+        </div>
+        <form method="POST" id="editTemplateForm" action="">
+            <div class="form-group">
+                <label>Название</label>
+                <input type="text" name="title" id="edit_title" required>
+            </div>
+            <div class="form-group">
+                <label>Описание</label>
+                <textarea name="description" id="edit_description" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Компания</label>
+                <select name="company" id="edit_company" required>
+                    {% for company in companies %}
+                    <option value="{{ company }}">{{ company }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Иконка (эмодзи)</label>
+                <input type="text" name="icon" id="edit_icon" maxlength="2">
+            </div>
+            <div class="form-group">
+                <label>Цвет</label>
+                <input type="color" name="color" id="edit_color">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="toggleModal('editTemplateModal')">Отмена</button>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add File Modal -->
+<div id="addFileModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📎 Добавить файл</h3>
+            <button class="close-btn" onclick="toggleModal('addFileModal')">✕</button>
+        </div>
+        <form method="POST" action="{{ url_for('add_file_link') }}">
+            <div class="form-group">
+                <label>Шаблон</label>
+                <select name="template_id">
+                    <option value="">Общие файлы</option>
+                    {% for template in templates %}
+                    <option value="{{ template.id }}">{{ template.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Название файла</label>
+                <input type="text" name="file_name" required placeholder="Например: Бланк заявки">
+            </div>
+            <div class="form-group">
+                <label>Ссылка на файл</label>
+                <input type="url" name="file_url" required placeholder="https://...">
+            </div>
+            <div class="form-group">
+                <label>Компания</label>
+                <select name="company" required>
+                    {% for company in companies %}
+                    <option value="{{ company }}">{{ company }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Тип файла</label>
+                <select name="file_type">
+                    <option value="pdf">PDF</option>
+                    <option value="doc">DOC/DOCX</option>
+                    <option value="xls">XLS/XLSX</option>
+                    <option value="txt">TXT</option>
+                    <option value="other">Другое</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="toggleModal('addFileModal')">Отмена</button>
+                <button type="submit" class="btn btn-primary">Добавить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.requests-catalog-page {
+    padding: 20px 0;
+}
+
+/* Tabs */
+.catalog-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 30px;
+    background: white;
+    padding: 8px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px 20px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.tab-btn:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.catalog-header-banner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 40px;
+    margin-bottom: 30px;
+    color: white;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-text h1 {
+    margin: 0 0 10px 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+.header-text p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 1.1rem;
+}
+
+.header-stats {
+    display: flex;
+    gap: 40px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.admin-controls-section {
+    margin-bottom: 30px;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 20px;
+}
+
+.templates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 24px;
+}
+
+.template-card-modern {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.template-card-modern:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+    border-color: #667eea;
+}
+
+.template-header {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.template-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+}
+
+.template-info h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.25rem;
+    color: #1e293b;
+}
+
+.template-description {
+    color: #64748b;
+    margin: 0 0 12px 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.company-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #e0f2fe;
+    color: #0284c7;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.template-files {
+    margin: 20px 0;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.template-files h4 {
+    font-size: 1rem;
+    color: #475569;
+    margin-bottom: 12px;
+}
+
+.file-grid {
+    display: grid;
+    gap: 8px;
+}
+
+.file-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s;
+    border: 1px solid #e2e8f0;
+}
+
+.file-card:hover {
+    background: #e0f2fe;
+    border-color: #0284c7;
+}
+
+.file-icon {
+    font-size: 24px;
+}
+
+.file-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.file-name {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.9rem;
+}
+
+.file-type {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.btn-delete-file {
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.btn-delete-file:hover {
+    opacity: 1;
+}
+
+.template-actions {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    color: #94a3b8;
+    font-size: 1.1rem;
+}
+
+/* Files Grid */
+.files-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.file-card-large {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s;
+    border: 2px solid #e2e8f0;
+    position: relative;
+}
+
+.file-card-large:hover {
+    border-color: #667eea;
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
+    transform: translateY(-2px);
+}
+
+.file-icon-large {
+    font-size: 48px;
+    flex-shrink: 0;
+}
+
+.file-info-large {
+    flex: 1;
+}
+
+.file-info-large h4 {
+    margin: 0 0 8px 0;
+    font-size: 1rem;
+    color: #1e293b;
+}
+
+.file-type-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #e0f2fe;
+    color: #0284c7;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.file-company {
+    margin: 4px 0 0 0;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.btn-delete-file-large {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #fee2e2;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.file-card-large:hover .btn-delete-file-large {
+    opacity: 1;
+}
+
+.btn-delete-file-large:hover {
+    background: #fecaca;
+}
+
+/* Requests Table */
+.requests-table-container {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    overflow-x: auto;
+}
+
+.requests-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.requests-table thead {
+    background: #f8fafc;
+}
+
+.requests-table th {
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #475569;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.requests-table td {
+    padding: 16px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.requests-table tbody tr {
+    transition: background 0.2s;
+}
+
+.requests-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.request-title {
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+
+.request-description {
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.type-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    background: #f1f5f9;
+    color: #475569;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-approved {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-rejected {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    backdrop-filter: blur(4px);
+}
+
+.modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1e293b;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+
+    .header-stats {
+        justify-content: center;
+    }
+
+    .templates-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .template-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+}
+</style>
+
+<script>
+function toggleModal(modalId) {
+    const modal = document.getElementById(modalId);
+    modal.classList.toggle('active');
+}
+
+// Close modal on outside click
+document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('active');
+        }
+    });
+});
+
+// Tab switching
+function switchTab(tabName) {
+    // Remove active class from all tabs and content
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    // Add active class to clicked tab and corresponding content
+    event.target.classList.add('active');
+    document.getElementById(tabName + '-tab').classList.add('active');
+}
+
+// Edit template
+function editTemplate(id, title, description, company, icon, color) {
+    document.getElementById('edit_title').value = title;
+    document.getElementById('edit_description').value = description;
+    document.getElementById('edit_company').value = company;
+    document.getElementById('edit_icon').value = icon;
+    document.getElementById('edit_color').value = color;
+    document.getElementById('editTemplateForm').action = '/template/edit/' + id;
+    toggleModal('editTemplateModal');
+}
+</script>
+{% endblock %}
