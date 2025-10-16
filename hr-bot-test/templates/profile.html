@@ -1,0 +1,331 @@
+
+{% extends "base.html" %}
+
+{% block title %}Профиль - SapaHR{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+    <div class="profile-container">
+        <!-- Header with Avatar and Basic Info -->
+        <div class="profile-header">
+            <div class="profile-left">
+                <div class="profile-avatar">
+                    {{ user.first_name[0] if user.first_name else '?' }}
+                </div>
+                <div class="profile-info">
+                    <h1>{{ user.first_name }} {{ user.last_name or '' }}</h1>
+                    <p class="profile-position">{{ user.position or 'Должность не указана' }}</p>
+                    <div class="contact-info">
+                        <span>📞 {{ user.phone or 'Не указан' }}</span>
+                        <span>✉️ {{ user.email or 'Не указан' }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="status-widget">
+                <h3>Текущий статус</h3>
+                <div class="status-indicator status-{{ user.work_status or 'active' }}">
+                    {% if user.work_status == 'active' %}🟢 Активный
+                    {% elif user.work_status == 'remote' %}🟡 Удаленно
+                    {% elif user.work_status == 'vacation' %}🔴 Отпуск
+                    {% elif user.work_status == 'sick' %}⚫ Больничный
+                    {% else %}⚪ Без статуса
+                    {% endif %}
+                </div>
+                {% if is_admin %}
+                <form method="POST" action="{{ url_for('update_user_status', user_id=user.id) }}" class="status-form">
+                    <select name="work_status" required>
+                        <option value="active" {% if user.work_status == 'active' %}selected{% endif %}>🟢 Активный</option>
+                        <option value="remote" {% if user.work_status == 'remote' %}selected{% endif %}>🟡 Удаленно</option>
+                        <option value="vacation" {% if user.work_status == 'vacation' %}selected{% endif %}>🔴 Отпуск</option>
+                        <option value="sick" {% if user.work_status == 'sick' %}selected{% endif %}>⚫ Больничный</option>
+                        <option value="none" {% if not user.work_status or user.work_status == 'none' %}selected{% endif %}>⚪ Без статуса</option>
+                    </select>
+                    <button type="submit" class="btn-small">Изменить</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="profile-content">
+            <div class="profile-section">
+                <h2>Основная информация</h2>
+                <form method="POST" action="{{ url_for('update_profile') }}">
+                    <div class="form-group">
+                        <label for="company">Компания</label>
+                        <select id="company" name="company" required>
+                            <option value="">Выберите компанию</option>
+                            {% for comp in ['Sapa Technologies', 'Neo Factoring', 'Sapa Digital Finance', 'AlgaPay', 'AI Parking', 'Sapa Digital Communications', 'Sapa Solutions'] %}
+                            <option value="{{ comp }}" {% if user.company == comp %}selected{% endif %}>{{ comp }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="position">Должность</label>
+                        <input type="text" id="position" name="position" value="{{ user.position or '' }}" 
+                               placeholder="Введите должность" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="department">Отдел</label>
+                        <input type="text" id="department" name="department" value="{{ user.department or '' }}" 
+                               placeholder="Введите отдел">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Телефон</label>
+                        <input type="text" id="phone" name="phone" value="{{ user.phone or '' }}" 
+                               placeholder="Введите телефон">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                </form>
+            </div>
+
+            <div class="profile-section">
+                <h2>Статистика</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">Баллы</span>
+                        <span class="stat-value">{{ user.points or 0 }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Уровень</span>
+                        <span class="stat-value">{{ user.level or 1 }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Дата регистрации</span>
+                        <span class="stat-value">{{ user.created_at.strftime('%d.%m.%Y') if user.created_at else '-' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-page {
+    background: #f5f7fa;
+    min-height: calc(100vh - 64px);
+    padding: 24px;
+}
+
+.profile-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.profile-header {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.profile-left {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 42px;
+    font-weight: 700;
+}
+
+.profile-info h1 {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+    color: #1e293b;
+}
+
+.profile-position {
+    color: #64748b;
+    margin: 0 0 12px 0;
+    font-size: 16px;
+}
+
+.contact-info {
+    display: flex;
+    gap: 20px;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.status-widget {
+    text-align: center;
+    min-width: 200px;
+}
+
+.status-widget h3 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    color: #64748b;
+}
+
+.status-indicator {
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.status-indicator.status-active {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-indicator.status-remote {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-indicator.status-vacation {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-indicator.status-sick {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.status-indicator.status-none {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.status-form {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.status-form select {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.btn-small:hover {
+    background: #4f46e5;
+}
+
+.profile-content {
+    display: grid;
+    gap: 24px;
+}
+
+.profile-section {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.profile-section h2 {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.btn-primary {
+    padding: 12px 24px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 16px;
+}
+
+.btn-primary:hover {
+    background: #4f46e5;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 12px;
+}
+
+.stat-label {
+    display: block;
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+@media (max-width: 768px) {
+    .profile-header {
+        flex-direction: column;
+        gap: 24px;
+        align-items: flex-start;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
